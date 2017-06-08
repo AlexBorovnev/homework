@@ -20,12 +20,12 @@ module.exports = {
       loader: 'react-hot-loader!babel-loader'
     },
     {
-      test: /(\.css)$/,
-      loaders: ['style', 'css']
+      test: /\.css$/,
+      loader: 'style-loader!css-loader'
     },
     {
       test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
-      loader: 'url?limit=10000&mimetype=image/svg+xml'
+      loader: 'url-loader?limit=10000&mimetype=image/svg+xml'
     }]
   },
   resolve: {

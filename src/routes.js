@@ -6,7 +6,7 @@ import AddPage from './components/add/AddPage';
 
 export default (
   <Route path="/" component={App}>
-    <Route component={ListPage} />
+    <IndexRoute component={ListPage} />
     <Route path="add" component={AddPage}/>
   </Route>
 );

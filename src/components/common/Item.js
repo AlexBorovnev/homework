@@ -2,7 +2,7 @@ import React from 'react';
 
 const Item = ({item}) => {
   return (
-    <li key={item.number}>{`${item.number}: ${item.text}`}</li>
+    <li>{`${item.number}: ${item.text}`}</li>
   );
 };
 

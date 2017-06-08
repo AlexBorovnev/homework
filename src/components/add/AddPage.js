@@ -14,7 +14,7 @@ class AddPage extends React.Component {
     this.onClick = this.onClick.bind(this);
   }
   onClick() {
-    this.props.addItem(document.getElementById('add_item').value);
+    this.props.addItem(document.getElementsByTagName('input')[0].value);
     browserHistory.push('/');
   }
   render() {
