@@ -1,4 +1,4 @@
-let virtualDom = [];
+let virtualDom = {};
 /** @jsx h */
 
 function h(type, props, ...children) {
@@ -107,37 +107,19 @@ function changed(node1, node2) {
         node1.props && node1.props.forceUpdate;
 }
 
-function updateElement(newNode, oldNode, nodeIndex = 0, childIndex = 0) {
-    if (!oldNode) {
-        virtualDom.push({newNode: newNode, oldNode: undefined});
-        return virtualDom.length - 1;
-    } else if (!newNode) {
-        virtualDom[nodeIndex] = {oldNode: oldNode};
-    } else if (changed(newNode, oldNode)) {
-        virtualDom[nodeIndex] = {newNode: newNode, oldNode: oldNode};
-    } else if (newNode.type) {
-        const newLength = newNode.children.length;
-        const oldLength = oldNode.children.length;
-        for (let i = 0; i < newLength || i < oldLength; i++) {
-            updateElement(
-                newNode.children[i],
-                oldNode.children[i],
-                nodeIndex,
-                i
-            );
-        }
-    }
-}
-
-function renderNode($parent, newNode, oldNode, index = 0) {
+function renderNode($parent, newNode, oldNode, index) {
     if (!oldNode && newNode) {
         $parent.appendChild(
             createElement(newNode)
         );
+        return $parent.childNodes.length - 1;
     } else if (!newNode) {
+      if (index !== undefined && $parent.childNodes[index]) {
         $parent.removeChild(
-            $parent.childNodes[index]
+          $parent.childNodes[index]
         );
+      }
+      return undefined;
     } else if (changed(newNode, oldNode)) {
         $parent.replaceChild(
             createElement(newNode),
@@ -165,26 +147,45 @@ function renderNode($parent, newNode, oldNode, index = 0) {
 function render($parent) {
     const newVirtualDom = [];
     for (let index in virtualDom) {
-        const oldNode = virtualDom[index].oldNode;
-        const newNode = virtualDom[index].newNode;
-        renderNode($parent, newNode, oldNode);
-        newVirtualDom[index] = {oldNode: newNode, newNode: newNode };
+      const oldNode = virtualDom[index].oldNode;
+      const newNode = virtualDom[index].newNode;
+      const action = virtualDom[index].action;
+      let domId = virtualDom[index].domId;
+      if (action) {
+        domId = renderNode($parent, newNode, oldNode, domId);
+      }
+      newVirtualDom[index] = {oldNode: newNode, newNode: newNode, domId: domId};
     }
     virtualDom = newVirtualDom;
 }
 
+function updateElement(newNode, oldNode, nodeIndex, domId) {
+  if (!oldNode && newNode) {
+    virtualDom[nodeIndex] = {newNode: newNode, oldNode: undefined, action: 'create'};
+    return nodeIndex;
+  } else if (!newNode) {
+    virtualDom[nodeIndex] = {newNode: undefined, oldNode: oldNode, action: 'delete', domId: domId};
+  } else if (domId === undefined) {
+    virtualDom[nodeIndex] = {newNode: newNode, oldNode: undefined, action: 'create'};
+  } else {
+    virtualDom[nodeIndex] = {newNode: newNode, oldNode: oldNode, action: 'update', domId: domId};
+  }
+}
+
 function mount(renderedElement) {
-    return updateElement(renderedElement);
+    const index = Object.keys(virtualDom).length;
+    return updateElement(renderedElement, false, index);
 }
 
 function unmount(elementId) {
-    const deletedNode = virtualDom[elementId];
-    updateElement(false, deletedNode.oldNode, elementId);
+    const element = virtualDom[elementId];
+    updateElement(false, element.oldNode, elementId, element.domId);
 }
 
 function update(newNode, index) {
     const oldNode = virtualDom[index].newNode;
-    updateElement(newNode, oldNode);
+    const domId = virtualDom[index].domId;
+    updateElement(newNode, oldNode, index, domId);
 }
 
 //---------------------------------------------------------
@@ -220,17 +221,15 @@ const g = (
 const $root = document.getElementById('root');
 
 const id = mount(f);
-const id2 = mount(f);
+const id2 = mount(g);
 const id3 = mount(f);
 const id5 = mount(f);
 unmount(id2);
-
-const id4 = mount(g);
-console.log(virtualDom);
-// update(g, id3);
- update(g, id5);
-console.log(virtualDom);
+ update(g, id3);
 render($root);
-//
-// setTimeout(function(){unmount($root, id);}, 5000);
-// setTimeout(function(){const id4 = mount($root, f);console.log(id4, $root.childNodes);}, 10000);
+update(g, id5);
+render($root);
+const id6 = mount(g);
+render($root);
+unmount(id6);
+render($root);
