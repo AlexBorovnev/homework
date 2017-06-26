@@ -109,22 +109,27 @@ function changed(node1, node2) {
 
 function renderNode($parent, newNode, oldNode, index) {
     if (!oldNode && newNode) {
+      console.log('create', newNode);
         $parent.appendChild(
             createElement(newNode)
         );
         return $parent.childNodes.length - 1;
     } else if (!newNode) {
       if (index !== undefined && $parent.childNodes[index]) {
+        console.log('delete', $parent.childNodes[index]);
         $parent.removeChild(
           $parent.childNodes[index]
         );
       }
       return undefined;
     } else if (changed(newNode, oldNode)) {
+
+      console.log('update', newNode, oldNode);
         $parent.replaceChild(
             createElement(newNode),
             $parent.childNodes[index]
         );
+        return index;
     } else if (newNode.type) {
         updateProps(
             $parent.childNodes[index],
@@ -141,6 +146,7 @@ function renderNode($parent, newNode, oldNode, index) {
                 i
             );
         }
+        return index;
     }
 }
 
@@ -202,7 +208,7 @@ const f = (
             <input type="text" onInput={log} />
         </li>
         {/* this node will always be updated */}
-        <li forceUpdate={true}>text</li>
+        <li >text</li>
     </ul>
 );
 
@@ -214,22 +220,18 @@ const g = (
             <input type="text" onInput={log} />
         </li>
         {/* this node will always be updated */}
-        <li forceUpdate={true}>text</li>
+        <li >text</li>
     </ul>
 );
 
 const $root = document.getElementById('root');
 
 const id = mount(f);
-const id2 = mount(g);
-const id3 = mount(f);
-const id5 = mount(f);
-unmount(id2);
- update(g, id3);
 render($root);
-update(g, id5);
+update(f, id);
 render($root);
-const id6 = mount(g);
+update(f, id);
 render($root);
-unmount(id6);
+update(f, id);
 render($root);
+
